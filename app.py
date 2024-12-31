@@ -122,35 +122,42 @@ def main():
                 st.image(compressed_img, use_container_width=True)
                 st.write(f"Dimensions: {format_matrix_shape(compressed_img.shape)}")
             
-            # Download button
+            # Create compressed image buffer
             compressed_img_pil = Image.fromarray(compressed_img)
-            buf = io.BytesIO()
-            compressed_img_pil.save(buf, format="PNG")
-            buf.seek(0)
+            compressed_buffer = io.BytesIO()
+            compressed_img_pil.save(compressed_buffer, format="PNG", optimize=True)
+            compressed_buffer.seek(0)
+
+            # Download button
             st.download_button(
                 label="Download Compressed Image",
-                data=buf,
+                data=compressed_buffer,
                 file_name="compressed_image.png",
                 mime="image/png"
             )
 
-            # Size metrics
+            # Calculate actual file sizes
             st.write("---")
-            original_size = np.prod(original_img.shape) * original_img.itemsize / (1024 * 1024)
-            if len(original_img.shape) == 3:
-                compressed_size = (k * sum(original_img.shape[:2]) + k) * 3 * original_img.itemsize / (1024 * 1024)
-            else:
-                compressed_size = (k * sum(original_img.shape) + k) * original_img.itemsize / (1024 * 1024)
-
+            st.subheader("File Size Comparison")
+            
+            # Get original file size
+            uploaded_file.seek(0)
+            original_bytes = uploaded_file.read()
+            original_size = len(original_bytes) / (1024 * 1024)  # Convert to MB
+            
+            # Get compressed file size
+            compressed_size = len(compressed_buffer.getvalue()) / (1024 * 1024)  # Convert to MB
+            
+            # Display size metrics
             col3, col4, col5 = st.columns(3)
             with col3:
-                st.metric("Original Size", f"{original_size:.2f} MB")
+                st.metric("Original File Size", f"{original_size:.2f} MB")
             with col4:
-                st.metric("Compressed Size", f"{compressed_size:.2f} MB")
+                st.metric("Compressed File Size", f"{compressed_size:.2f} MB")
             with col5:
                 reduction = 100 * (1 - compressed_size / original_size)
                 st.metric("Size Reduction", f"{reduction:.1f}%")
-            
+
             # Matrix multiplication explanation
             st.write("---")
             st.write("**Matrix Multiplication:**")
@@ -179,8 +186,6 @@ def main():
                 vt_vis = visualize_matrix(components['Vt'], "Vt")
                 st.image(vt_vis, use_container_width=True)
                 st.write(f"Dimensions: {format_matrix_shape(components['shapes']['Vt'])}")
-
-            
 
         except Exception as e:
             st.error(f"An error occurred: {str(e)}")
