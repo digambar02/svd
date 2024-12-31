@@ -80,18 +80,6 @@ def svd_compress(image, k):
 def main():
     st.title('Image Compression using SVD')
 
-    # Display brief theory
-    st.write("""
-    **Singular Value Decomposition (SVD)** decomposes a matrix A into three matrices: A = U × S × Vᵀ
-    
-    For an image of size (m × n):
-    - **U**: Left singular vectors (m × k matrix)
-    - **S**: Singular values (k × k diagonal matrix)
-    - **Vᵀ**: Right singular vectors (k × n matrix)
-    
-    where k is the number of components chosen for compression.
-    """)
-
     uploaded_file = st.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
 
     if uploaded_file is not None:
@@ -157,6 +145,18 @@ def main():
             # with col5:
             #     reduction = 100 * (1 - compressed_size / original_size)
             #     st.metric("Size Reduction", f"{reduction:.1f}%")
+
+            # Display brief theory
+            st.write("""
+            **Singular Value Decomposition (SVD)** decomposes a matrix A into three matrices: A = U × S × Vᵀ
+            
+            For an image of size (m × n):
+            - **U**: Left singular vectors (m × k matrix)
+            - **S**: Singular values (k × k diagonal matrix)
+            - **Vᵀ**: Right singular vectors (k × n matrix)
+            
+            where k is the number of components chosen for compression.
+            """)
 
             # Matrix multiplication explanation
             st.write("---")
