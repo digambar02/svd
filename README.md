@@ -6,7 +6,6 @@ This project implements Singular Value Decomposition (SVD) for image compression
 - Choose the number of components (k) using a slider.
 - View the compressed image.
 - Download the compressed image.
-- See the size reduction after compression.
 
 ## Requirements
 
