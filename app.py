@@ -136,19 +136,19 @@ def main():
                 mime="image/png"
             )
 
-            # Calculate actual file sizes
-            st.write("---")
-            st.subheader("File Size Comparison")
+            # # Calculate actual file sizes
+            # st.write("---")
+            # st.subheader("File Size Comparison")
             
-            # Get original file size
-            uploaded_file.seek(0)
-            original_bytes = uploaded_file.read()
-            original_size = len(original_bytes) / (1024 * 1024)  # Convert to MB
+            # # Get original file size
+            # uploaded_file.seek(0)
+            # original_bytes = uploaded_file.read()
+            # original_size = len(original_bytes) / (1024 * 1024)  # Convert to MB
             
-            # Get compressed file size
-            compressed_size = len(compressed_buffer.getvalue()) / (1024 * 1024)  # Convert to MB
+            # # Get compressed file size
+            # compressed_size = len(compressed_buffer.getvalue()) / (1024 * 1024)  # Convert to MB
             
-            # Display size metrics
+            # # Display size metrics
             # col3, col4, col5 = st.columns(3)
             # with col3:
             #     st.metric("Original File Size", f"{original_size:.2f} MB")
