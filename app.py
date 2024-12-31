@@ -79,71 +79,117 @@ def svd_compress(image, k):
 
 def main():
     st.title('Image Compression using SVD')
+
+    # Display brief theory
+    st.write("""
+    **Singular Value Decomposition (SVD)** decomposes a matrix A into three matrices: A = U × S × Vᵀ
+    
+    For an image of size (m × n):
+    - **U**: Left singular vectors (m × k matrix)
+    - **S**: Singular values (k × k diagonal matrix)
+    - **Vᵀ**: Right singular vectors (k × n matrix)
+    
+    where k is the number of components chosen for compression.
+    """)
+
     uploaded_file = st.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
 
     if uploaded_file is not None:
         try:
             image = Image.open(uploaded_file)
-            original_format = image.format
             
-            # Compression controls
+            # Calculate maximum k value
+            max_k = min(image.size[0], image.size[1])
+            default_k = min(50, max_k)
+
+            # Slider for k
+            k = st.slider("Choose the number of components (k)", 
+                         min_value=1, 
+                         max_value=max_k,
+                         value=default_k)
+
+            # Compress image and get components
+            compressed_img, original_img, components = svd_compress(image, k)
+
+            # Display original and compressed images with dimensions
             col1, col2 = st.columns(2)
             with col1:
-                max_k = min(image.size[0], image.size[1])
-                k = st.slider("SVD Components (k)", 1, max_k, min(50, max_k))
+                st.subheader("Original Image")
+                st.image(image, use_container_width=True)
+                st.write(f"Dimensions: {format_matrix_shape(components['shapes']['original'])}")
             with col2:
-                quality = st.slider("Output Quality", 1, 100, 85)
-
-            # Compress image
-            compressed_img, original_img, _ = svd_compress(image, k)
+                st.subheader("Compressed Image")
+                st.image(compressed_img, use_container_width=True)
+                st.write(f"Dimensions: {format_matrix_shape(compressed_img.shape)}")
+            
+            # Create compressed image buffer
             compressed_img_pil = Image.fromarray(compressed_img)
-
-            # Save compressed image
             compressed_buffer = io.BytesIO()
-            if original_format == 'JPEG':
-                compressed_img_pil.save(compressed_buffer, 
-                                     format="JPEG", 
-                                     quality=quality, 
-                                     optimize=True,
-                                     progressive=True)
-            else:
-                compressed_img_pil.save(compressed_buffer, 
-                                     format="PNG", 
-                                     optimize=True,
-                                     compression_level=9)
-            
-            # Display images and metrics
-            col1, col2 = st.columns(2)
-            with col1:
-                st.image(image, caption="Original")
-            with col2:
-                st.image(compressed_img, caption="Compressed")
-
-            # Calculate sizes
-            uploaded_file.seek(0)
+            compressed_img_pil.save(compressed_buffer, format="PNG", optimize=True)
             compressed_buffer.seek(0)
-            original_size = len(uploaded_file.read()) / 1024  # KB
-            compressed_size = len(compressed_buffer.getvalue()) / 1024  # KB
-            
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.metric("Original", f"{original_size:.1f} KB")
-            with col2:
-                st.metric("Compressed", f"{compressed_size:.1f} KB")
-            with col3:
-                reduction = 100 * (1 - compressed_size/original_size)
-                st.metric("Reduction", f"{reduction:.1f}%")
 
             # Download button
             st.download_button(
-                "Download Compressed Image",
-                compressed_buffer,
-                f"compressed.{original_format.lower()}",
-                f"image/{original_format.lower()}"
+                label="Download Compressed Image",
+                data=compressed_buffer,
+                file_name="compressed_image.png",
+                mime="image/png"
             )
 
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
+            # Calculate actual file sizes
+            st.write("---")
+            st.subheader("File Size Comparison")
             
+            # Get original file size
+            uploaded_file.seek(0)
+            original_bytes = uploaded_file.read()
+            original_size = len(original_bytes) / (1024 * 1024)  # Convert to MB
+            
+            # Get compressed file size
+            compressed_size = len(compressed_buffer.getvalue()) / (1024 * 1024)  # Convert to MB
+            
+            # Display size metrics
+            # col3, col4, col5 = st.columns(3)
+            # with col3:
+            #     st.metric("Original File Size", f"{original_size:.2f} MB")
+            # with col4:
+            #     st.metric("Compressed File Size", f"{compressed_size:.2f} MB")
+            # with col5:
+            #     reduction = 100 * (1 - compressed_size / original_size)
+            #     st.metric("Size Reduction", f"{reduction:.1f}%")
+
+            # Matrix multiplication explanation
+            st.write("---")
+            st.write("**Matrix Multiplication:**")
+            st.latex(r"""
+            \text{Image}_{(m \times n)} = U_{(m \times k)} \times S_{(k \times k)} \times V^T_{(k \times n)}
+            """)
+
+            # Display component matrices with dimensions
+            st.subheader("SVD Components Visualization")
+            comp_col1, comp_col2, comp_col3 = st.columns(3)
+            
+            with comp_col1:
+                st.write("**U Matrix** (Left Singular Vectors)")
+                u_vis = visualize_matrix(components['U'], "U")
+                st.image(u_vis, use_container_width=True)
+                st.write(f"Dimensions: {format_matrix_shape(components['shapes']['U'])}")
+            
+            with comp_col2:
+                st.write("**S Matrix** (Singular Values)")
+                s_vis = visualize_matrix(components['S'], "S")
+                st.image(s_vis, use_container_width=True)
+                st.write(f"Dimensions: {format_matrix_shape(components['shapes']['S'])}")
+            
+            with comp_col3:
+                st.write("**Vt Matrix** (Right Singular Vectors)")
+                vt_vis = visualize_matrix(components['Vt'], "Vt")
+                st.image(vt_vis, use_container_width=True)
+                st.write(f"Dimensions: {format_matrix_shape(components['shapes']['Vt'])}")
+
+        except Exception as e:
+            st.error(f"An error occurred: {str(e)}")
+            st.error("Please try uploading a different image or adjusting the compression settings.")
+
 if __name__ == "__main__":
     main()
